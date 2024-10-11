@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 
-const accessKey = '2p8lpMpkI-VxEK1Vy0EOfQE646wmysvZLMGztoVpLq8'; 
+const accessKey = '2p8lpMpkI-VxEK1Vy0EOfQE646wmysvZLMGztoVpLq8';
 
 function App() {
-  const [inputData, setInputData] = useState(''); 
-  const [images, setImages] = useState([]);       
-  const [page, setPage] = useState(1);            
-  const [loading, setLoading] = useState(false);  
+  const [inputData, setInputData] = useState('');
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
 
 
   const searchImages = async (newPage = 1) => {
@@ -16,36 +16,36 @@ function App() {
       try {
         const response = await fetch(url);
         const data = await response.json();
-       
+
         if (newPage === 1) {
           setImages(data.results);
         } else {
-          setImages((prevImages) => [...prevImages, ...data.results]); 
+          setImages((prevImages) => [...prevImages, ...data.results]);
         }
       } catch (error) {
         console.error('Error fetching data from Unsplash:', error);
       } finally {
-        setLoading(false); 
+        setLoading(false);
       }
     }
   };
 
   useEffect(() => {
     if (page > 1) {
-      searchImages(page); 
+      searchImages(page);
     }
   }, [page]);
 
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setPage(1); 
+    setPage(1);
     searchImages();
   };
 
- 
+
   const handleLoadMore = () => {
-    setPage((prevPage) => prevPage + 1); 
+    setPage((prevPage) => prevPage + 1);
   };
 
   return (
@@ -53,7 +53,7 @@ function App() {
       <div className="max-w-4xl mx-auto p-4">
         <h1 className="text-4xl font-bold text-center mb-4">Image Search</h1>
 
-       
+
         <form onSubmit={handleSearch} className="flex justify-center mb-4">
           <input
             type="text"
@@ -70,9 +70,9 @@ function App() {
           </button>
         </form>
 
-      
+
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {images.length > 0 ? (
+          {
             images.map((image) => (
               <div key={image.id} className="overflow-hidden rounded-lg shadow-lg">
                 <img
@@ -93,12 +93,11 @@ function App() {
                 </div>
               </div>
             ))
-          ) : (
-            <p className="text-center text-gray-500 col-span-full">No images found</p>
-          )}
+          }
+
         </div>
 
-    
+
         {images.length > 0 && (
           <div className="flex justify-center mt-4">
             <button
