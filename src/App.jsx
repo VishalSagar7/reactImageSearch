@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 const accessKey = '2p8lpMpkI-VxEK1Vy0EOfQE646wmysvZLMGztoVpLq8';
 
@@ -7,7 +7,7 @@ function App() {
   const [images, setImages] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-
+  const loaderRef = useRef(null);
 
   const searchImages = async (newPage = 1) => {
     if (inputData) {
@@ -18,9 +18,9 @@ function App() {
         const data = await response.json();
 
         if (newPage === 1) {
-          setImages(data.results);
+          setImages(data.results); // First page result
         } else {
-          setImages((prevImages) => [...prevImages, ...data.results]);
+          setImages((prevImages) => [...prevImages, ...data.results]); // Concatenate new images
         }
       } catch (error) {
         console.error('Error fetching data from Unsplash:', error);
@@ -30,12 +30,12 @@ function App() {
     }
   };
 
+  // Trigger search when page changes
   useEffect(() => {
     if (page > 1) {
       searchImages(page);
     }
   }, [page]);
-
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -43,16 +43,33 @@ function App() {
     searchImages();
   };
 
+  // Infinite scrolling handler
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      const target = entries[0];
+      if (target.isIntersecting) {
+        setPage((prevPage) => prevPage + 1); // Load next page when the loader is visible
+      }
+    }, {
+      rootMargin: '50px', // Trigger before reaching the bottom
+      threshold: 1.0, // 100% visibility required
+    });
 
-  const handleLoadMore = () => {
-    setPage((prevPage) => prevPage + 1);
-  };
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => {
+      if (loaderRef.current) {
+        observer.unobserve(loaderRef.current); 
+      }
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto p-4">
         <h1 className="text-4xl font-bold text-center mb-4">Image Search</h1>
-
 
         <form onSubmit={handleSearch} className="flex justify-center mb-4">
           <input
@@ -70,45 +87,36 @@ function App() {
           </button>
         </form>
 
-
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {
-            images.map((image) => (
-              <div key={image.id} className="overflow-hidden rounded-lg shadow-lg">
-                <img
-                  src={image.urls.small}
-                  alt={image.alt_description}
-                  className="w-full h-60 object-cover"
-                />
-                <div className="p-2 text-center">
-                  <p className="text-sm font-semibold">{image.alt_description || 'No description'}</p>
-                  <a
-                    href={image.links.html}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500"
-                  >
-                    View on Unsplash
-                  </a>
-                </div>
+          {images.map((image) => (
+            <div key={image.id} className="overflow-hidden rounded-lg shadow-lg">
+              <img
+                src={image.urls.small}
+                alt={image.alt_description}
+                className="w-full h-60 object-cover"
+              />
+              <div className="p-2 text-center">
+                <p className="text-sm font-semibold">{image.alt_description || 'No description'}</p>
+                <a
+                  href={image.links.html}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500"
+                >
+                  View on Unsplash
+                </a>
               </div>
-            ))
-          }
-
+            </div>
+          ))}
         </div>
 
-
-        {images.length > 0 && (
+        {loading && (
           <div className="flex justify-center mt-4">
-            <button
-              onClick={handleLoadMore}
-              disabled={loading}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              {loading ? 'Loading...' : 'Load More'}
-            </button>
+            <p>Loading...</p>
           </div>
         )}
+
+        <div ref={loaderRef} className="h-20"></div> 
       </div>
     </div>
   );
